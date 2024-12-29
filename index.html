@@ -1,0 +1,296 @@
+[20:07, 12/29/2024] Soumya Kolkur: <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Sort Visualization</title>
+    <style>
+        /* Basic Styling */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 80%;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            font-size: 16px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        #result {
+            font-size: 18px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+
+        li {
+            background-color: #e8e8e8;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .array-bar {
+            width: 30px;
+            height: 30px;
+            background-color: #4CAF50;
+            color: white;
+            margin: 5px;
+            text-align: center;
+            line-height: 30px;
+            border-radius: 5px;
+            display: inline-block;
+            transition: all 0.5s ease;
+        }
+
+        .splitting {
+            background-color: #ffeb3b;
+        }
+
+        .merged {
+            background-color: #2196f3;
+        }
+
+        .sorting {
+            transition: transform 0.5s ease;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Merge Sort Visualization</h1>
+        <label for="arrayInput">Enter numbers (comma-separated):</label>
+        <input type="text" id="arrayInput" placeholder="e.g., 5, 3, 8, 2">
+        <button onclick="performMergeSort()">Sort Array</button>
+
+        <h2>Sorted Array:</h2>
+        <p id="result">-</p>
+
+        <h2>Steps of Merge Sort:</h2>
+        <ul id="steps"></ul>
+
+        <div id="arrayDisplay" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // Merge Sort Logic
+        function mergeSort(arr) {
+            if (arr.length <= 1) {
+                return arr;
+            }
+
+            const middle = Math.floor(arr.length / 2);
+            const left = arr.slice(0, middle);
+            const right = arr.slice(middle);
+
+            return merge(mergeSort(left), mergeSort(right));
+        }
+
+        function merge(left, right) {
+            let result = [];
+            let leftIndex = 0;
+            let rightIndex = 0;
+
+            while (leftIndex < left.length && rightIndex < right.length) {
+                if (left[leftIndex] < right[rightIndex]) {
+                    result.push(left[leftIndex]);
+                    leftIndex++;
+                } else {
+                    result.push(right[rightIndex]);
+                    rightIndex++;
+                }
+            }
+
+            return result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+        }
+
+        // Perform Merge Sort with Animation
+        async function performMergeSort() {
+            const input = document.getElementById('arrayInput').value;
+            const array = input.split(',').map(num => parseInt(num.trim(), 10));
+
+            if (array.some(isNaN)) {
+                alert("Please enter a valid list of numbers.");
+                return;
+            }
+
+            document.getElementById('result').textContent = '-';
+            document.getElementById('steps').innerHTML = '';
+            displayArray(array);
+
+            const steps = [];
+            await mergeSortWithSteps(array, steps);
+
+            setTimeout(() => {
+                displaySteps(steps);
+            }, 1000);
+        }
+
+        // Merge Sort with Step Recording
+        async function mergeSortWithSteps(arr, steps) {
+            if (arr.length <= 1) {
+                return arr;
+            }
+
+            const middle = Math.floor(arr.length / 2);
+            const left = arr.slice(0, middle);
+            const right = arr.slice(middle);
+
+            steps.push({ left: left, right: right });
+            highlightArray(left, right);
+
+            const merged = await mergeWithSteps(
+                await mergeSortWithSteps(left, steps),
+                await mergeSortWithSteps(right, steps),
+                steps
+            );
+
+            return merged;
+        }
+
+        // Merging with Animation
+        async function mergeWithSteps(left, right, steps) {
+            let result = [];
+            let leftIndex = 0;
+            let rightIndex = 0;
+
+            while (leftIndex < left.length && rightIndex < right.length) {
+                if (left[leftIndex] < right[rightIndex]) {
+                    result.push(left[leftIndex]);
+                    leftIndex++;
+                } else {
+                    result.push(right[rightIndex]);
+                    rightIndex++;
+                }
+            }
+
+            result = result.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+
+            steps.push({ merged: result });
+            highlightMerged(result);
+
+            // Adding a delay for animation to show the merging process
+            await delay(500);
+            return result;
+        }
+
+        // Display the Array
+        function displayArray(array) {
+            const arrayDisplay = document.getElementById('arrayDisplay');
+            arrayDisplay.innerHTML = '';
+
+            array.forEach(num => {
+                const bar = document.createElement('div');
+                bar.classList.add('array-bar');
+                bar.textContent = num;
+                arrayDisplay.appendChild(bar);
+            });
+        }
+
+        // Display Steps of Merge Sort
+        function displaySteps(steps) {
+            const stepsList = document.getElementById('steps');
+            stepsList.innerHTML = '';
+
+            steps.forEach(step => {
+                const listItem = document.createElement('li');
+                listItem.textContent = step.merged ? Merged: [${step.merged}] : Left: [${step.left}], Right: [${step.right}];
+                stepsList.appendChild(listItem);
+            });
+
+            document.getElementById('result').textContent = steps[steps.length - 1].merged.join(', ');
+        }
+
+        // Highlighting splitting arrays
+        function highlightArray(left, right) {
+            const bars = document.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('splitting');
+            });
+
+            const allBars = document.querySelectorAll('.array-bar');
+            allBars.forEach(bar => {
+                const value = parseInt(bar.textContent);
+                if (left.includes(value)) {
+                    bar.classList.add('splitting');
+                } else if (right.includes(value)) {
+                    bar.classList.add('splitting');
+                }
+            });
+        }
+
+        // Highlighting merged arrays
+        function highlightMerged(result) {
+            const bars = document.querySelectorAll('.array-bar');
+            bars.forEach(bar => {
+                bar.classList.remove('merged');
+            });
+
+            const allBars = document.querySelectorAll('.array-bar');
+            allBars.forEach(bar => {
+                const value = parseInt(bar.textContent);
+                if (result.includes(value)) {
+                    bar.classList.add('merged');
+                }
+            });
+        }
+
+        // Delay function for async
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
